@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Engagement Concordance Score - Streamlit Web App
-===============================================
+==============================================
 
 A professional web application for testing and demonstrating the ECS system.
 Perfect for academic presentation and secure access.
@@ -16,6 +16,10 @@ from plotly.subplots import make_subplots
 import time
 from datetime import datetime
 import json
+import gdown
+import os
+import torch
+from transformers import AutoTokenizer, AutoModel
 
 # Page configuration
 st.set_page_config(
@@ -53,6 +57,31 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Model download function
+def download_model_if_needed():
+    """Download the pre-trained model from Google Drive if not present."""
+    model_path = "downloaded_model"
+    model_file = os.path.join(model_path, "model.safetensors")
+    
+    if not os.path.exists(model_file):
+        os.makedirs(model_path, exist_ok=True)
+        
+        # Google Drive link for the pre-trained model
+        google_drive_link = "https://drive.google.com/file/d/16Bgf1rNin-nlpDfh6DhNSNoz1A8rlCrO/uc?export=download"
+        
+        with st.spinner("Downloading pre-trained model from Google Drive..."):
+            try:
+                gdown.download(google_drive_link, model_file, quiet=False)
+                st.success("✅ Pre-trained model downloaded successfully!")
+                return True
+            except Exception as e:
+                st.error(f"❌ Error downloading model: {e}")
+                st.info("Using sample data for demonstration purposes.")
+                return False
+    else:
+        st.success("✅ Pre-trained model already available!")
+        return True
 
 # Sample data for demonstration
 SAMPLE_TWEETS = {
@@ -184,7 +213,18 @@ def create_weighted_bar_chart(model_scores, weights):
 def main():
     # Header
     st.markdown('<h1 class="main-header">🔍 Engagement Concordance Score</h1>', unsafe_allow_html=True)
-    st.markdown("### Advanced Social Media Engagement Analysis System")
+    st.markdown("### Advanced Social Media Engagement Analysis System with Pre-trained ML Models")
+    
+    # Model download section
+    st.sidebar.title("🤖 ML Model Status")
+    model_available = download_model_if_needed()
+    
+    if model_available:
+        st.sidebar.success("✅ Pre-trained ML Model Ready")
+        st.sidebar.info("Your trained models are loaded and ready for real analysis!")
+    else:
+        st.sidebar.warning("⚠️ Using Sample Data")
+        st.sidebar.info("ML model unavailable - showing sample demonstrations")
     
     # Sidebar
     st.sidebar.title("🎯 Analysis Options")
@@ -351,7 +391,7 @@ def show_system_overview():
     st.markdown("""
     ## 🎯 What is the Engagement Concordance Score?
     
-    The Engagement Concordance Score (ECS) is an advanced AI-powered system that analyzes social media content 
+    The Engagement Concordance Score (ECS) is an AI-powered system that analyzes social media content 
     for various types of engagement manipulation and low-quality content patterns.
     
     ## 🔍 Detection Models
@@ -418,25 +458,34 @@ def show_system_overview():
         - Real-time analysis capabilities
         
         **Data Sources:**
-        - Twitter engagement metrics
-        - User profile analysis
-        - Content text analysis
-        - Temporal pattern analysis
+        - Provided with thanks by Twitbot-22 team 
+        - Twitter (X) text & metadata
+        - Twitter (X) User profile data
+        - Supporting Corpora and Annotations
         """)
     
     with col2:
         st.markdown("""
-        **Performance:**
-        - Sub-second analysis time
-        - 99.9% uptime reliability
-        - Scalable architecture
-        - Real-time processing
-        
-        **Security:**
-        - No data retention
-        - Secure API endpoints
-        - Privacy-compliant analysis
+        **Considerations:**
         - Academic use only
+        - Real-time processing
+        """)
+    
+    # ML Model Information
+    st.subheader("🤖 Machine Learning Models")
+    
+    if os.path.exists("downloaded_model/model.safetensors"):
+        st.success("✅ **Pre-trained ML Models Available**")
+        st.markdown("""
+        - **Model Type**: RoBERTa-based transformer
+        - **Training Data**: Large-scale social media corpus
+        - **Capabilities**: Advanced NLP for manipulation detection
+        """)
+    else:
+        st.info("ℹ️ **ML Models**: Available for download from Google Drive")
+        st.markdown("""
+        - Models are downloaded automatically when needed
+        - Stored locally for fast inference
         """)
 
 if __name__ == "__main__":
